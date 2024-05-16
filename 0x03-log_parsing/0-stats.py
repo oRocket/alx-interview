@@ -1,65 +1,54 @@
 #!/usr/bin/python3
+
 import sys
-import signal
 
 
-# Initialize variables
-total_file_size = 0
-status_code_counts = {
-    200: 0, 301: 0, 400: 0, 401: 0, 
-    403: 0, 404: 0, 405: 0, 500: 0
-}
-line_count = 0
+def print_msg(dict_sc, total_file_size):
+    """
+    Method to print
+    Args:
+        dict_sc: dict of status codes
+        total_file_size: total of the file
+    Returns:
+        Nothing
+    """
 
-def print_stats():
-    """Prints the statistics."""
     print("File size: {}".format(total_file_size))
-    for code in sorted(status_code_counts.keys()):
-        if status_code_counts[code] > 0:
-            print("{}: {}".format(code, status_code_counts[code]))
+    for key, val in sorted(dict_sc.items()):
+        if val != 0:
+            print("{}: {}".format(key, val))
 
-def signal_handler(sig, frame):
-    """Handles the keyboard interruption signal (CTRL + C)."""
-    print_stats()
-    sys.exit(0)
 
-# Set up the signal handler for CTRL + C
-signal.signal(signal.SIGINT, signal_handler)
+total_file_size = 0
+code = 0
+counter = 0
+dict_sc = {"200": 0,
+           "301": 0,
+           "400": 0,
+           "401": 0,
+           "403": 0,
+           "404": 0,
+           "405": 0,
+           "500": 0}
 
 try:
     for line in sys.stdin:
-        try:
-            # Split and validate the line format
-            parts = line.split()
-            if len(parts) < 7:
-                continue
-            
-            ip = parts[0]
-            date = parts[3][1:] + " " + parts[4][:-1]
-            request = parts[5] + " " + parts[6] + " " + parts[7]
-            status_code = int(parts[-2])
-            file_size = int(parts[-1])
-            
-            # Ensure the line matches the expected format
-            if request != '"GET /projects/260 HTTP/1.1"':
-                continue
-            
-            # Update total file size and status code counts
-            total_file_size += file_size
-            if status_code in status_code_counts:
-                status_code_counts[status_code] += 1
-            
-            # Increment the line count
-            line_count += 1
+        parsed_line = line.split()  # ✄ trimming
+        parsed_line = parsed_line[::-1]  # inverting
 
-            # Print statistics every 10 lines
-            if line_count % 10 == 0:
-                print_stats()
-                
-        except (IndexError, ValueError):
-            continue
+        if len(parsed_line) > 2:
+            counter += 1
 
-except KeyboardInterrupt:
-    # Print statistics on keyboard interruption
-    print_stats()
-    sys.exit(0)
+            if counter <= 10:
+                total_file_size += int(parsed_line[0])  # file size
+                code = parsed_line[1]  # status code
+
+                if (code in dict_sc.keys()):
+                    dict_sc[code] += 1
+
+            if (counter == 10):
+                print_msg(dict_sc, total_file_size)
+                counter = 0
+
+finally:
+    print_msg(dict_sc, total_file_size)
