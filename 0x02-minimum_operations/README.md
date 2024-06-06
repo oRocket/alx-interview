@@ -41,7 +41,6 @@ Min number of operations to reach 12 characters: 7
 carrie@ubuntu:~/0x02-minoperations$
 ```
 
-```
 **Repo**:
 
 - GitHub repository: `alx-interview`
